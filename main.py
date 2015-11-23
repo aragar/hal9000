@@ -15,11 +15,20 @@ class HAL9000(object):
         """
         self.terminal = terminal
         self.location = 'unknown'
+        self._is_initialised = False
 
     def on_input(self, evt):
         """Called when user types anything in the terminal, connected via event.
         """
-        self.terminal.log("Good morning! This is HAL.", align='right', color='#00805A')
+        if self._is_initialised:
+            if evt.text.startswith('Where am I?'):
+                self._log_hal('You are now in the {}, dummy.'.format(self.location))
+
+            else:
+                self._log_hal("Your input is registered and won't be taken into mind. Keep trying.")
+        else:
+            self._log_hal("Good morning, mortal! This is HAL.")
+            self._is_initialised = True
 
     def on_command(self, evt):
         """Called when user types a command starting with `/` also done via events.
@@ -28,17 +37,27 @@ class HAL9000(object):
             vispy.app.quit()
 
         elif evt.text.startswith('relocate'):
-            self.terminal.log('', align='center', color='#404040')
-            self.terminal.log('\u2014 Now in the {}. \u2014'.format(evt.text[9:]), align='center', color='#404040')
+            self._log_info('')
+            self._log_info('\u2014 Now in the {}. \u2014'.format(evt.text[9:]))
+            self.location = evt.text[9:]
 
         else:
-            self.terminal.log('Command `{}` unknown.'.format(evt.text), align='left', color='#ff3000')    
-            self.terminal.log("I'm afraid I can't do that.", align='right', color='#00805A')
+            self._log_error('Command `{}` unknown.'.format(evt.text))    
+            self._log_hal("I'm afraid I can't do that.")
 
     def update(self, _):
         """Main update called once per second via the timer.
         """
         pass
+
+    def _log_hal(self, text, align='right', color='#00805A'):
+        self.terminal.log(text, align, color)
+
+    def _log_info(self, text, align='center', color='#404040'):
+        self.terminal.log(text, align, color)
+
+    def _log_error(self, text, align='left', color='#ff3000'):
+        self.terminal.log(text, align, color)
 
 
 class Application(object):
